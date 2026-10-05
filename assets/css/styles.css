@@ -79,9 +79,7 @@ section[id],#main{scroll-margin-top:84px;}
 }
 .bg-indigo .section-title{color:var(--paper);}
 .note p{font-family:var(--font-serif);font-size:1.28rem;line-height:1.75;color:#454c6b;margin:0 0 1.1rem;font-variant-numeric:lining-nums;}
-.note .signoff{margin-top:1.6rem;font-size:1.7rem;line-height:1.25;font-style:italic;color:var(--indigo);}
-.signoff{margin-top:1.6rem;font-family:var(--font-serif);font-style:italic;font-size:1.7rem;line-height:1.2;color:var(--indigo);}
-.signoff span{display:inline-block;font-size:1.1rem;color:var(--gold-deep);margin-bottom:.15rem;}
+.note .signoff{margin-top:1.6rem;}
 .lede{font-family:var(--font-serif);font-size:1.22rem;line-height:1.7;color:#535a75;font-variant-numeric:lining-nums;}
 .bg-indigo .lede{color:rgba(255,255,255,.82);}
 .serif-italic{font-family:var(--font-serif);font-style:italic;}
