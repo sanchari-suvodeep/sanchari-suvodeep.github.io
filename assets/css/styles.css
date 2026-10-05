@@ -79,7 +79,7 @@ section[id],#main{scroll-margin-top:84px;}
 }
 .bg-indigo .section-title{color:var(--paper);}
 .signoff{margin-top:1.6rem;font-family:var(--font-serif);font-style:italic;font-size:1.7rem;line-height:1.2;color:var(--indigo);}
-.signoff span{display:block;font-size:1.1rem;color:var(--gold-deep);margin-bottom:.15rem;}
+.signoff span{display:inline-block;font-size:1.1rem;color:var(--gold-deep);margin-bottom:.15rem;}
 .lede{font-family:var(--font-serif);font-size:1.22rem;line-height:1.7;color:#535a75;font-variant-numeric:lining-nums;}
 .bg-indigo .lede{color:rgba(255,255,255,.82);}
 .serif-italic{font-family:var(--font-serif);font-style:italic;}
