@@ -3,7 +3,7 @@
 A wedding site for **December 11–14, 2026** at **Blue Cedar Lodge, Gatlinburg, Tennessee** —
 a weekend-long celebration in the Great Smoky Mountains. A Smoky Mountain sunset hero over a page drawn from the same indigo ridgeline.
 
-**Live site: https://sanchari-suvodeep.github.io/**
+**Live site: https://sanchari-suvodeep.web.app/**
 
 > **New here? Read [SETUP.md](SETUP.md).** It walks through publishing to GitHub Pages,
 > connecting the RSVP form, and filling in the remaining details.
@@ -21,7 +21,7 @@ a weekend-long celebration in the Great Smoky Mountains. A Smoky Mountain sunset
 | **Itinerary** | A pinned scroll story: one landscape, a camera that sinks continuously into the valley, and light that blends from dusk to night to mist to dawn while each day's entry swaps in place |
 | **Travel & Stay** | The lodge's address with an embedded Google Map (click it to open Google Maps), directions, Apple Maps and copy-address; then airports, lodging and things to do |
 | **Gallery** | Your photos in a self-balancing masonry grid with a lightbox; add more any time with `tools/add-photos.py` |
-| **RSVP** | Form → a Google Sheet you own |
+| **RSVP** | Saves straight into the planner's database and its RSVP inbox |
 | **FAQ** | Collapsible answers |
 
 A ridgeline rises out of the charcoal footer to close the page.
@@ -38,7 +38,6 @@ It loads fast on hotel wifi and will still work in ten years.
 - `assets/css/styles.css` — the whole design system (palette lives in `:root`, sampled from the hero ridges)
 - `assets/js/main.js` — behaviour (you shouldn't need to touch this)
 - `assets/js/config.js` — **the knobs you actually turn**
-- `rsvp-backend/Code.gs` — the Google Apps Script that catches RSVPs
 - `tools/generate-ridges.py` — optional; redraws the mountains if you want a different range
 - `tools/build-story.py` — optional; regenerates the itinerary scenes and journal entries
 - `assets/js/gallery.js` — the gallery's photo list

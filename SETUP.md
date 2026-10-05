@@ -4,117 +4,35 @@ Three things to do, in this order. Budget about 30 minutes for all of it.
 
 ---
 
-## 1. Put it on GitHub Pages
+## 1. Where it lives
 
-### Create the repo
+| | |
+|---|---|
+| **Live site** | https://sanchari-suvodeep.web.app |
+| **Hosting** | Firebase Hosting, site `sanchari-suvodeep`, in the planner's Firebase project `sanchari-suvodeep-wedding` (it's a separate site; guests never see or reach the planner) |
+| **Code** | https://github.com/sanchari-suvodeep/sanchari-suvodeep.github.io |
 
-```bash
-cd /Users/suvodeepmajumder/Document/repos/wedding_website
-git init -b main
-git add -A
-git commit -m "Wedding site"
-```
-
-Create an empty repository on github.com (no README, no .gitignore — this
-folder already has them), then:
+### Publishing a change
 
 ```bash
-git remote add origin https://github.com/sanchari-suvodeep/sanchari-suvodeep.github.io.git
-git push -u origin main
+cd ~/Document/repos/wedding_website
+git add -A && git commit -m "What changed" && git push     # keeps the code backed up on GitHub
+npx firebase-tools deploy --only hosting                    # publishes the site (about 30 seconds)
 ```
 
-### Turn Pages on
+`firebase.json` pins the deploy to the `sanchari-suvodeep` site, so this can never overwrite the planner. Docs and `tools/` aren't uploaded.
 
-In the repo on github.com: **Settings → Pages → Build and deployment →
-Source: Deploy from a branch**, then **Branch: `main`** and folder **`/ (root)`**,
-and **Save**.
+> The GitHub repo is also served by GitHub Pages at the `github.io` address. It's the same code, and its RSVPs land in the same place. Once you're sharing the `web.app` link, you can switch Pages off in the repo's Settings → Pages if you'd rather there were only one address.
 
-That's it. Every `git push` to `main` republishes the site in about a minute.
-Your site is at:
+## 2. RSVPs
 
-```
-https://sanchari-suvodeep.github.io/
-```
+Replies save straight into the planner's database (an `rsvps` collection) and appear in the **RSVP inbox** at the top of the planner's **Guests** tab: https://sanchari-suvodeep-wedding.web.app/#guests
 
-It lives in the free `sanchari-suvodeep` GitHub organization, which keeps
-the site on its own address, separate from any other GitHub Pages sites.
+From the inbox you **Apply** a reply to a guest (it sets their RSVP and copies their dietary needs, phone and note; a requested song goes into Songs), **Add as new guest**, or **Dismiss** it. Every action can be undone.
 
-> **Tip:** if you name the repo `<your-username>.github.io`, the site lives at
-> the shorter `https://<your-username>.github.io/` instead.
+What guests can do is limited by the database's security rules (kept in the planner's repo, `firestore.rules`): they can *add* a reply, with every field checked and capped, and nothing else. They can't read anyone's reply or touch the guest list.
 
-### A custom domain (optional)
-
-Buy a domain, then in **Settings → Pages → Custom domain** enter it and tick
-*Enforce HTTPS*. At your registrar, add these DNS records:
-
-| Type  | Name  | Value |
-|-------|-------|-------|
-| A     | `@`   | `185.199.108.153` |
-| A     | `@`   | `185.199.109.153` |
-| A     | `@`   | `185.199.110.153` |
-| A     | `@`   | `185.199.111.153` |
-| CNAME | `www` | `<your-username>.github.io` |
-
-GitHub commits a `CNAME` file to the repo for you. DNS can take a few hours.
-
-Once you have the final URL, open `index.html` and make the `og:image` tag
-absolute so WhatsApp and iMessage show the invitation in link previews:
-
-```html
-<meta property="og:image" content="https://your-domain.com/assets/img/invitation.jpg">
-```
-
----
-
-## 2. Wire up the RSVP
-
-RSVPs land in a Google Sheet you own. Free, no account for guests, no limits.
-
-**a. Create the sheet.** Go to [sheets.new](https://sheets.new) and name it
-something like *Wedding RSVPs*.
-
-**b. Open the script editor.** In that sheet: **Extensions → Apps Script**.
-
-**c. Paste the code.** Delete whatever is in `Code.gs`, then paste the entire
-contents of `rsvp-backend/Code.gs` from this repo. Save (⌘S).
-
-**d. Optional — get emailed on every RSVP.** Near the top of the script, set:
-
-```js
-var NOTIFY_EMAIL = 'suvodeep.majumder90@gmail.com';
-```
-
-**e. Deploy it.** Click **Deploy → New deployment**. Press the gear icon next
-to *Select type* and choose **Web app**. Then:
-
-- **Execute as:** *Me*
-- **Who has access:** **Anyone** ← this matters, and it does *not* make your
-  sheet public. It only means guests can submit the form without a Google login.
-
-Click **Deploy**. Google will ask you to authorise the script — click through
-*Advanced → Go to (project name) → Allow*. The scary "unverified app" warning
-is expected; it's your own script.
-
-**f. Copy the Web app URL.** It ends in `/exec` and looks like:
-
-```
-https://script.google.com/macros/s/AKfycbx................../exec
-```
-
-**g. Paste it into the site.** Open `assets/js/config.js` and set:
-
-```js
-rsvpEndpoint: 'https://script.google.com/macros/s/AKfycbx................../exec',
-```
-
-**h. Test it.** Open the site, submit an RSVP with your own name, and confirm a
-row appears in the sheet. You can delete the test row afterwards.
-
-> **When you edit the script later**, you must click **Deploy → Manage
-> deployments → ✏️ Edit → Version: New version → Deploy**. Just saving the file
-> does *not* update the live endpoint. This trips up everyone once.
-
----
+There's nothing to set up. The connection details are in `assets/js/config.js` (`rsvpStore`); they only identify the project and aren't secrets.
 
 ## 3. Fill in your details
 

@@ -1,0 +1,25 @@
+{
+  "hosting": {
+    "site": "sanchari-suvodeep",
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/.*/**",
+      "**/node_modules/**",
+      "*.md",
+      "assets/audio/*.md",
+      "tools/**"
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(jpg|jpeg|png|webp)",
+        "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }]
+      },
+      {
+        "source": "**/*.@(js|css|html)",
+        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      }
+    ]
+  }
+}

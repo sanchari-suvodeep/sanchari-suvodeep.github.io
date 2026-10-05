@@ -6,16 +6,19 @@ window.WEDDING_CONFIG = {
   /* ---- When the countdown counts down to (local time, 24h clock) ---- */
   weddingDate: '2026-12-12T16:00:00',   // ceremony, Sat 12 Dec 4:00 pm
 
-  /* ---- RSVP endpoint -------------------------------------------------
-     Paste the Google Apps Script Web App URL here after you deploy it.
-     Step-by-step instructions: see SETUP.md  →  "2. Wire up the RSVP".
-     Leave as '' and the form will politely tell guests to email instead.
-     It looks like:
-       https://script.google.com/macros/s/AKfycb..................../exec
+  /* ---- Where RSVPs are saved -----------------------------------------
+     Replies go straight into the Wedding HQ planner's database (Firebase
+     project "sanchari-suvodeep-wedding") and appear in its RSVP inbox on
+     the Guests tab. These two values only identify the project; they are
+     not secrets. The database's security rules decide what's allowed:
+     anyone can add a reply, nobody outside the planner can read them.
   ------------------------------------------------------------------- */
-  rsvpEndpoint: '',
+  rsvpStore: {
+    projectId: 'sanchari-suvodeep-wedding',
+    apiKey: 'AIzaSyBn87xwduHNH_0zZuLRL1wfjcmoOinukG0'
+  },
 
-  /* ---- Fallback contact shown if the RSVP endpoint is not set ------- */
+  /* ---- Shown to guests if a reply can't be sent ---------------------- */
   contactEmail: 'suvodeep.majumder90@gmail.com',
 
   /* ---- Deadline shown on the RSVP card ------------------------------ */

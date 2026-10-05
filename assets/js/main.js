@@ -850,30 +850,46 @@
         dietary: coming ? f.dietary.value.trim() : '',
         song: coming ? f.song.value.trim() : '',
         message: f.message.value.trim(),
-        submittedAt: new Date().toISOString(),
-        userAgent: navigator.userAgent
+        submittedAt: new Date().toISOString()
       };
 
-      if (!CFG.rsvpEndpoint) {
+      var store = CFG.rsvpStore || {};
+      if (!store.projectId || !store.apiKey) {
         show('The RSVP form isn’t connected yet.' + mailtoFallback(), true);
         return;
       }
 
       /* --- send ------------------------------------------------------
-         text/plain keeps this a "simple" request, so the browser skips
-         the CORS preflight that Apps Script cannot answer.             */
+         Straight into the planner's Firestore via its REST API, so no
+         Firebase library is needed on this page. The document id is made
+         here, "exists: false" makes it create-only, and the timestamp is
+         stamped by the server (the security rules insist on that). */
       submit.disabled = true;
       submit.textContent = 'Sending…';
 
-      fetch(CFG.rsvpEndpoint, {
+      var id = '';
+      var abc = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      var rnd = (window.crypto && crypto.getRandomValues) ? crypto.getRandomValues(new Uint8Array(20)) : null;
+      for (var k = 0; k < 20; k++) id += abc[rnd ? rnd[k] % abc.length : Math.floor(Math.random() * abc.length)];
+
+      var fields = {};
+      Object.keys(payload).forEach(function (key) {
+        if (payload[key] !== '') fields[key] = { stringValue: payload[key] };
+      });
+      var root = 'projects/' + store.projectId + '/databases/(default)/documents';
+
+      fetch('https://firestore.googleapis.com/v1/' + root + ':commit?key=' + encodeURIComponent(store.apiKey), {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify(payload),
-        redirect: 'follow'
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ writes: [{
+          update: { name: root + '/rsvps/' + id, fields: fields },
+          currentDocument: { exists: false },
+          updateTransforms: [{ fieldPath: 'createdAt', setToServerValue: 'REQUEST_TIME' }]
+        }] })
       })
-        .then(function (res) { return res.json().catch(function () { return { ok: res.ok }; }); })
+        .then(function (res) { return { ok: res.ok }; })
         .then(function (res) {
-          if (!res || res.ok === false) throw new Error(res && res.error || 'rejected');
+          if (!res.ok) throw new Error('rejected');
           form.hidden = true;
           thanks.hidden = false;
           if (!coming) {
@@ -884,7 +900,7 @@
         })
         .catch(function () {
           submit.disabled = false;
-          submit.textContent = 'Send our reply';
+          submit.textContent = 'Send RSVP';
           show('Something went wrong sending that.' + mailtoFallback(), true);
         });
     });
