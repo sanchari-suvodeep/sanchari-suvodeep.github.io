@@ -62,7 +62,7 @@ DAYS = [
    "The main event, on the lodge&rsquo;s covered pavilion &mdash; followed straight away by cocktail hour, dinner, and dancing late into the night.", None, True),
   ("13","Day three &middot; Morning mist","Sunday, December 13","Mountain Adventures","All day &middot; come and go as you like",
    "A day out in the Smokies &mdash; no hiking, no schedule, just the mountains.",
-   ["Newfound Gap","Cades Cove","Downtown Gatlinburg","Dolly Parton&rsquo;s house"], False),
+   ['<a href="https://smokymountainnationalpark.com/popular-places-smoky-mountains/newfound-gap/" target="_blank" rel="noopener">Newfound Gap</a>','<a href="https://experiencecadescove.com" target="_blank" rel="noopener">Cades Cove</a>','<a href="https://downtowngatlinburg.com" target="_blank" rel="noopener">Downtown Gatlinburg</a>','<a href="https://www.visitmysmokies.com/blog/dolly-parton/dolly-partons-childhood-home/" target="_blank" rel="noopener">Dolly Parton&rsquo;s house</a>'], False),
   ("14","Day four &middot; First light","Monday, December 14","Farewell","Checkout 12:00 pm",
    "Coffee, long goodbyes, and the drive home.", None, False),
 ]

@@ -356,6 +356,14 @@ div.night-only{position:absolute;inset:0;}
   padding:.45rem .8rem;border:1px solid rgba(255,255,255,.22);border-radius:999px;color:#fff;
 }
 .stops li::before{content:counter(s);color:#e3c88b;margin-right:.45rem;}
+/* a stop with a link: the whole chip is the link */
+.stops li:has(a){padding:0;transition:border-color .2s,background .2s;}
+.stops li:has(a)::before{content:none;}
+.stops a{display:inline-block;padding:.45rem .8rem;color:inherit;text-decoration:none;border-radius:inherit;}
+.stops a::before{content:counter(s);color:#e3c88b;margin-right:.45rem;}
+.stops a::after{content:"\2197";margin-left:.4rem;color:rgba(255,255,255,.55);font-size:.85em;}
+.stops li:has(a):hover{border-color:#e3c88b;background:rgba(255,255,255,.08);}
+.stops a:focus-visible{outline:2px solid #e3c88b;outline-offset:2px;}
 
 /* weather strip inside each journal entry */
 .wx{
