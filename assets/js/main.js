@@ -1,5 +1,5 @@
 /* =====================================================================
-   Suvodeep & Sanchari — site behaviour
+   Sanchari & Suvodeep — site behaviour
    Nothing here needs editing for normal use; change assets/js/config.js.
    ===================================================================== */
 (function () {
@@ -71,7 +71,7 @@
 
     function esc(t) { return String(t || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     function figure(p, i) {
-      var alt = esc(p.alt || 'Suvodeep and Sanchari');
+      var alt = esc(p.alt || 'Sanchari and Suvodeep');
       return '<figure class="photo"><button class="photo-btn" type="button" data-i="' + i + '" aria-label="Open photo: ' + alt + '">' +
              '<picture>' + (p.webp ? '<source srcset="' + esc(p.src) + '.webp" type="image/webp">' : '') +
              '<img src="' + esc(p.src) + '.jpg" alt="' + alt + '" width="' + p.w + '" height="' + p.h + '" loading="lazy">' +
@@ -334,7 +334,7 @@
       at = (i + GALLERY.length) % GALLERY.length;
       var p = GALLERY[at];
       view.src = p.src + (p.webp && webp ? '.webp' : '.jpg');
-      view.alt = p.alt || 'Suvodeep and Sanchari';
+      view.alt = p.alt || 'Sanchari and Suvodeep';
       view.style.animation = 'none'; void view.offsetWidth; view.style.animation = '';
       count.textContent = (at + 1) + ' / ' + GALLERY.length;
     }

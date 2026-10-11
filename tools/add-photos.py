@@ -24,7 +24,7 @@ DATA = os.path.join(ROOT, "assets", "js", "gallery.js")
 OUT  = os.path.join(ROOT, "assets", "img", "gallery")
 EXTS = {".jpg", ".jpeg", ".png", ".heic", ".heif", ".avif", ".webp", ".tif", ".tiff"}
 LONG_EDGE = 1400
-DEFAULT_ALT = "Suvodeep and Sanchari"
+DEFAULT_ALT = "Sanchari and Suvodeep"
 
 def load():
     text = open(DATA, encoding="utf-8").read()

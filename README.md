@@ -1,4 +1,4 @@
-# Suvodeep &amp; Sanchari
+# Sanchari &amp; Suvodeep
 
 A wedding site for **December 11–14, 2026** at **Blue Cedar Lodge, Gatlinburg, Tennessee** —
 a weekend-long celebration in the Great Smoky Mountains. A Smoky Mountain sunset hero over a page drawn from the same indigo ridgeline.
