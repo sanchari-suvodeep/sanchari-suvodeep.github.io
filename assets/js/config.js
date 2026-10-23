@@ -22,7 +22,7 @@ window.WEDDING_CONFIG = {
   contactEmail: 'suvodeep.majumder90@gmail.com',
 
   /* ---- Deadline shown on the RSVP card ------------------------------ */
-  rsvpDeadline: 'October 1, 2026',
+  rsvpDeadline: 'November 1, 2026',
 
   /* ---- Background music ---------------------------------------------
      Drop an .mp3 at assets/audio/ambient.mp3 and it just works.
