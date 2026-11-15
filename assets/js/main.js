@@ -11,14 +11,9 @@
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
   /* ------------------------------------------------- config into page */
-  var deadlineEl = $('#rsvpDeadline');
-  if (deadlineEl && CFG.rsvpDeadline) deadlineEl.textContent = CFG.rsvpDeadline;
-
-  var faqEmail = $('#faqEmail');
-  if (faqEmail && CFG.contactEmail) {
-    faqEmail.href = 'mailto:' + CFG.contactEmail;
-    faqEmail.textContent = CFG.contactEmail;
-  }
+  $$('#faqEmail, #closedEmail, .js-email').forEach(function (a) {
+    if (CFG.contactEmail) { a.href = 'mailto:' + CFG.contactEmail; a.textContent = CFG.contactEmail; }
+  });
 
   /* ----------------------------------------------------------- nav */
   var nav = $('#nav');
@@ -562,6 +557,16 @@
       ctx.rotate(p.rot);
       if (p.kind === 'emoji') {
         var s = p.size; ctx.drawImage(emojiSprite(p.ch), -s / 2, -s / 2, s, s);
+      } else if (p.kind === 'glyph') {
+        /* a music note, drawn in one of the confetti colours */
+        ctx.font = p.size + 'px Georgia, "Times New Roman", serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = p.color; ctx.fillText(p.ch, 0, 0);
+      } else if (p.kind === 'ember') {
+        /* a glowing spark: bright core, soft halo, flickering */
+        var fl = 0.65 + Math.sin(p.flip * 3) * 0.35;
+        ctx.fillStyle = p.halo; ctx.beginPath(); ctx.arc(0, 0, p.r * 3 * fl, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(0, 0, p.r * fl, 0, Math.PI * 2); ctx.fill();
       } else if (p.kind === 'paper') {
         /* a flat piece turning through 3D: squash on one axis, darker when
            its back face is towards us */
@@ -664,104 +669,48 @@
       }
       run(out);
     }
-    return { confetti: confetti, sadRain: sadRain };
-  })();
-
-  /* ------------------------------------- RSVP: the shy "decline" button */
-  (function rsvpFun() {
-    var accept = $('input[name="attending"][value="Joyfully accepts"]');
-    var decline = $('input[name="attending"][value="Regretfully declines"]');
-    if (!accept || !decline) return;
-    var acceptBox = accept.closest('.choice'), box = decline.closest('.choice');
-    var label = box.querySelector('span'), card = $('.rsvp-card'), note = $('#shyNote');
-    var original = label.textContent;
-    var LINES = ['Are you sure? 🥺', 'Really?? 😟', 'Please reconsider 😭'];
-    var SAID  = ['The decline button moved. Are you sure?', 'It moved again. Really?', 'Please reconsider.'];
-    /* finishing: the third try is playing out — swallow clicks until we select it ourselves */
-    var tries = 0, done = false, finishing = false, tx = 0, ty = 0, homeTimer = 0, recentPointer = 0, lastPt = null;
-    box.classList.add('is-shy');
-
-    function place(x, y, tilt) {
-      tx = x; ty = y;
-      box.style.transform = (x || y) ? 'translate(' + x.toFixed(0) + 'px,' + y.toFixed(0) + 'px) rotate(' + tilt.toFixed(1) + 'deg)' : '';
-      box.classList.toggle('is-away', !!(x || y));
-    }
-    function home() { clearTimeout(homeTimer); place(0, 0, 0); }
-
-    /* pick a spot inside the card, as far from the pointer as possible,
-       clear of the accept button, and a real jump from where it is now */
-    function dodge(pt) {
-      var c = card.getBoundingClientRect(), r = box.getBoundingClientRect();
-      var hx = r.left - tx, hy = r.top - ty, w = r.width, h = r.height;
-      var a = acceptBox.getBoundingClientRect(), pad = 14;
-      var minX = c.left + pad, maxX = c.right - pad - w;
-      var minY = Math.max(c.top + pad, hy - 190, 84), maxY = Math.min(c.bottom - pad - h, hy + 190, window.innerHeight - h - 12);
-      var px = pt ? pt.x : r.left + w / 2, py = pt ? pt.y : r.top + h / 2;
-      var best = null;
-      for (var i = 0; i < 40; i++) {
-        var x = minX + Math.random() * Math.max(0, maxX - minX), y = minY + Math.random() * Math.max(0, maxY - minY);
-        var cx = x + w / 2, cy = y + h / 2;
-        var score = Math.hypot(cx - px, cy - py);
-        var overlapA = !(x + w < a.left - 8 || x > a.right + 8 || y + h < a.top - 8 || y > a.bottom + 8);
-        if (overlapA) score -= 2000;
-        if (Math.hypot(x - r.left, y - r.top) < 120) score -= 600;
-        if (!best || score > best.s) best = { s: score, x: x, y: y };
+    /* music notes: a fountain from a point that drifts up and sways */
+    function notes(x, y, n) {
+      var out = [], set = ['♪', '♫', '♬', '♩'], cols = ['#e8673c', '#c2496b', '#c5a365', '#262c4e', '#7d5c8c', '#ef5540'];
+      for (var i = 0; i < (n || 46); i++) {
+        var a = R(-160, -20) * Math.PI / 180, v = R(4, 13);
+        out.push({
+          kind: 'glyph', ch: set[(Math.random() * set.length) | 0], size: R(22, 46), color: cols[(Math.random() * cols.length) | 0],
+          x: x + R(-20, 20), y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 0.05, drag: 0.972,
+          rot: R(-0.4, 0.4), vr: R(-0.04, 0.04), flip: 0, fr: 0, sway: 0.06, swayRate: R(0.04, 0.09), phase: R(0, 6.28),
+          life: 0, max: R(150, 230), delay: R(0, 40)
+        });
       }
-      place(best.x - hx, best.y - hy, (Math.random() - 0.5) * 8);
-      clearTimeout(homeTimer);
-      /* if they give up, drift back rather than squatting on another field */
-      homeTimer = setTimeout(function () { if (!done && !finishing) home(); }, 2400);
+      run(out);
     }
-
-    function attempt(pt) {
-      tries++;
-      label.textContent = LINES[Math.min(tries, 3) - 1];
-      note.textContent = SAID[Math.min(tries, 3) - 1];
-      if (!reduced) dodge(pt);
-      if (tries < 3) return;
-
-      finishing = true;
-      box.classList.remove('is-shy');
-      setTimeout(function () {
-        if (!reduced) { FX.sadRain(); card.classList.add('is-sad'); }
-        setTimeout(function () {
-          home();
-          label.textContent = original;
-          finishing = false; done = true;
-          decline.checked = true;
-          decline.dispatchEvent(new Event('change', { bubbles: true }));
-          note.textContent = 'Regretfully declines is selected. We will miss you.';
-        }, reduced ? 0 : 900);
-        setTimeout(function () { card.classList.remove('is-sad'); }, 3600);
-      }, reduced ? 0 : 450);
+    /* a gold starburst: glints thrown out in a ring */
+    function sparkle(x, y) {
+      var out = [];
+      for (var i = 0; i < 70; i++) {
+        var a = R(0, 6.28), v = R(3, 11);
+        out.push({
+          kind: i % 3 ? 'glint' : 'dot', r: R(2.4, 4.6), color: ['#f6e2a0', '#e3c88b', '#fff', '#c5a365'][i % 4],
+          x: x, y: y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 0.12, drag: 0.94,
+          rot: R(0, 6.28), vr: R(-0.1, 0.1), flip: R(0, 6.28), fr: R(0.1, 0.25),
+          life: 0, max: R(70, 120), delay: R(0, 8)
+        });
+      }
+      run(out);
     }
-
-    /* mouse and touch: dodge the moment the press begins */
-    box.addEventListener('pointerdown', function (e) {
-      if (done) return;
-      e.preventDefault();
-      if (finishing) return;
-      lastPt = { x: e.clientX, y: e.clientY };
-      recentPointer = Date.now();
-      attempt(lastPt);
-    });
-    /* keyboard (Space, arrow keys) and anything else that would select it */
-    decline.addEventListener('click', function (e) {
-      if (done) return;
-      e.preventDefault();
-      if (finishing || Date.now() - recentPointer < 600) return;    /* playing out, or already handled on pointerdown */
-      attempt(null);
-    });
-
-    /* confetti for a yes, every time it's pressed (but not in a flurry) */
-    var lastBurst = 0;
-    accept.addEventListener('click', function () {
-      if (tx || ty) home();
-      acceptBox.classList.remove('pop'); void acceptBox.offsetWidth; acceptBox.classList.add('pop');
-      if (reduced || Date.now() - lastBurst < 700) return;
-      lastBurst = Date.now();
-      FX.confetti(acceptBox.getBoundingClientRect());
-    });
+    /* embers that rise and flicker out, trailing a lantern */
+    function embers(x, y, n) {
+      var out = [];
+      for (var i = 0; i < (n || 60); i++) {
+        out.push({
+          kind: 'ember', r: R(1.4, 3), color: Math.random() < 0.5 ? '#ffe0a0' : '#ffb35c', halo: 'rgba(255,150,70,.18)',
+          x: x + R(-26, 26), y: y + R(-10, 20), vx: R(-0.6, 0.6), vy: R(-3.2, -0.8), g: -0.02, drag: 0.985,
+          rot: 0, vr: 0, flip: R(0, 6.28), fr: R(0.08, 0.2), sway: 0.05, swayRate: R(0.04, 0.08), phase: R(0, 6.28),
+          life: 0, max: R(90, 190), delay: R(0, 120)
+        });
+      }
+      run(out);
+    }
+    return { confetti: confetti, sadRain: sadRain, notes: notes, sparkle: sparkle, embers: embers };
   })();
 
   /* ------------------------------------------------------ music toggle */
@@ -794,116 +743,434 @@
     });
   })();
 
-  /* -------------------------------------------------------------- RSVP */
-  (function rsvp() {
-    var form = $('#rsvpForm');
+  /* ------------------------------------------------- the Request Booth
+     Three tiles (song, suggestion, wish), one shared name,
+     and a send button that does something different for each. Entries go
+     into the planner's database ("requests"); the public can only add. */
+  (function booth() {
+    var form = $('#boothForm');
     if (!form) return;
+    var wrap = $('.booth'), tiles = $$('.tile'), panels = $$('.panel', form);
+    var send = $('#boothSend'), sendIco = $('.send-ico', send), sendText = $('.send-text', send);
+    var msg = $('#boothMsg'), done = $('#boothDone');
+    var KIND = {
+      song:       { icon: 'song', btn: 'Drop the needle', field: 'song', empty: 'Which song should we play?',
+                    prompt: 'What gets you on the dance floor?', hint: 'Tell us the song. We’ll make sure the DJ (us) plays it.',
+                    title: 'Needle’s down!', text: 'Your song is in the queue. See you on the dance floor.', unit: ['song', 'songs'] },
+      suggestion: { icon: 'idea', btn: 'Fold & fly', field: 'idea', empty: 'What’s your idea?',
+                    prompt: 'Make the weekend even better', hint: 'A hike, a game, a dish, a tradition from your family. We’re all ears.',
+                    title: 'Idea landed!', text: 'Your note just touched down on our desk. Thank you for making the weekend better.', unit: ['idea', 'ideas'] },
+      wish:       { icon: 'wish', btn: 'Send it up', field: 'wish', empty: 'Write your wish first.',
+                    prompt: 'A few words for the two of us', hint: 'Blessings, advice, or your bold prediction for the first dance.',
+                    title: 'Your wish is floating up', text: 'Thank you. We’ll read it together, probably more than once.', unit: ['wish', 'wishes'] }
+    };
+    /* songs famous for emptying (or stampeding) a dance floor */
+    var BANNED = /macarena|chicken dance|cha.?cha slide|cotton.?eye.?joe|\by\.?m\.?c\.?a\b|gangnam|baby shark|hokey.?pokey|electric slide|achy breaky|who let the dogs|barbie girl/i;
+    var kind = 'song', dared = false, busy = false, tally = { song: 0, suggestion: 0, wish: 0 };
 
-    var msg     = $('#formMsg');
-    var thanks  = $('#rsvpThanks');
-    var submit  = $('#rsvpSubmit');
-    var details = $('#ifAttending');
-
-    /* Collapse the guest details when someone declines. */
-    $$('input[name="attending"]', form).forEach(function (r) {
-      r.addEventListener('change', function () {
-        var coming = r.value.indexOf('Joyfully') === 0 && r.checked;
-        details.hidden = !coming;
-      });
+    /* the line icons live in a <template> in the page, one per tile */
+    function icon(name) { var t = $('#boothIcons'), i = t && t.content.querySelector('[data-k="' + name + '"] svg'); return i ? i.outerHTML : ''; }
+    function show(text, isError) { msg.innerHTML = text; msg.classList.toggle('error', !!isError); msg.hidden = false; }
+    function resetSend() {
+      sendIco.innerHTML = icon(KIND[kind].icon); sendText.textContent = KIND[kind].btn;
+      send.classList.remove('dare'); send.disabled = false; dared = false;
+    }
+    /* the card glides to its new height instead of snapping, so the page
+       below eases up or down rather than jumping */
+    var card = $('.booth-card'), morphing = null;
+    function morph(change) {
+      var from = card.offsetHeight;
+      change();
+      if (reduced || !from) return;
+      var to = card.offsetHeight;
+      if (morphing) morphing.cancel();
+      if (Math.abs(from - to) < 4) return;
+      card.style.overflow = 'hidden';
+      morphing = card.animate([{ height: from + 'px' }, { height: to + 'px' }], { duration: 650, easing: 'cubic-bezier(.22,.61,.36,1)' });
+      morphing.onfinish = morphing.oncancel = function () { card.style.overflow = ''; morphing = null; };
+    }
+    function pick(k, focus) { morph(function () { pickNow(k); }); if (focus) { var f = form.elements[KIND[k].field]; if (f) f.focus({ preventScroll: true }); } }
+    function pickNow(k) {
+      kind = k; wrap.dataset.kind = k;
+      tiles.forEach(function (t) { t.setAttribute('aria-selected', String(t.dataset.kind === k)); });
+      panels.forEach(function (p) { p.hidden = p.dataset.panel !== k; });
+      if (typeof Crate !== 'undefined') Crate.show(k);
+      $('#boothPrompt').textContent = KIND[k].prompt; $('#boothHint').textContent = KIND[k].hint;
+      done.hidden = true; form.hidden = false; msg.hidden = true;
+      resetSend();
+    }
+    tiles.forEach(function (t) { t.addEventListener('click', function () { pick(t.dataset.kind, true); }); });
+    /* arrow keys move between tiles, like any tab list */
+    $('.tiles').addEventListener('keydown', function (e) {
+      var i = tiles.indexOf(document.activeElement); if (i < 0) return;
+      var d = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (!d) return; e.preventDefault();
+      var n = tiles[(i + d + tiles.length) % tiles.length]; n.focus(); pick(n.dataset.kind);
+    });
+    form.addEventListener('input', function (e) {
+      if (dared && e.target.name === 'song') resetSend();
+      msg.hidden = true;
     });
 
-    function show(text, isError) {
-      msg.innerHTML = text;
-      msg.classList.toggle('error', !!isError);
-      msg.hidden = false;
+    /* ---- the flying props ------------------------------------------- */
+    function prop(cls, html) {
+      var el = document.createElement('div'); el.className = 'fx-prop ' + cls; el.setAttribute('aria-hidden', 'true');
+      if (html) el.innerHTML = html;
+      document.body.appendChild(el); return el;
     }
+    function at(el, x, y) { return 'translate(' + (x - el.offsetWidth / 2) + 'px,' + (y - el.offsetHeight / 2) + 'px)'; }
+    function gone(anim, el) { anim.onfinish = function () { el.remove(); }; }
 
+    var PLAY = {
+      /* a record spins up out of the button, then a burst of music notes */
+      song: function (x, y, chaos) {
+        var v = prop('fx-vinyl');
+        var a = v.animate([
+          { transform: at(v, x, y) + ' scale(.2) rotate(0deg)', opacity: 0 },
+          { transform: at(v, x, y - 90) + ' scale(1.1) rotate(360deg)', opacity: 1, offset: .35 },
+          { transform: at(v, x, y - 110) + ' scale(1) rotate(860deg)', opacity: 1, offset: .75 },
+          { transform: at(v, x, y - 140) + ' scale(1.5) rotate(1100deg)', opacity: 0 }
+        ], { duration: 2500, easing: 'cubic-bezier(.3,.6,.4,1)' });
+        gone(a, v);
+        setTimeout(function () { FX.notes(x, y - 110, chaos ? 90 : 46); if (chaos) FX.confetti(send.getBoundingClientRect()); }, 880);
+      },
+      /* the note folds into a paper plane and glides around the screen like a
+         real one: steady speed, smoothly changing turns, a wide loop now and
+         then, gently steering away from the edges, then out of sight. It
+         leaves a soft gold contrail. A new flight every time. */
+      suggestion: function (x, y) {
+        var p = prop('fx-plane', '<svg viewBox="0 0 64 64"><path d="M4 30 L60 6 L40 58 L30 36 Z" fill="#fff" stroke="#c5a365" stroke-width="2" stroke-linejoin="round"/><path d="M30 36 L60 6 L22 33 Z" fill="#f3ead6" stroke="#c5a365" stroke-width="2" stroke-linejoin="round"/></svg>');
+        var W = window.innerWidth, H = window.innerHeight, rnd = function (a, b) { return a + Math.random() * (b - a); };
+        var M = Math.min(W, H), V = Math.max(4.5, M / 140);            /* pixels per step: steady speed */
+        var KMAX = V / Math.max(110, M * 0.16);                          /* tightest ordinary turn */
+
+        /* fly the route ahead of time, one small step at a time */
+        var px = x, py = y, hd = -Math.PI / 2 + rnd(-0.5, 0.5), k = 0, path = [[px, py, hd]];
+        var a1 = rnd(0.5, 1) * KMAX, w1 = rnd(0.012, 0.022), p1 = rnd(0, 6.28);
+        var a2 = rnd(0.2, 0.5) * KMAX, w2 = rnd(0.03, 0.05), p2 = rnd(0, 6.28);
+        var cruise = Math.round(rnd(2.6, 3.4) * M / V);                  /* steps before heading for the exit */
+        var loopAt = Math.random() < 0.65 ? Math.round(rnd(0.25, 0.6) * cruise) : -1;
+        var loopDir = Math.random() < 0.5 ? 1 : -1, loopK = V / Math.max(70, M * 0.1), loopLen = Math.round(2 * Math.PI / loopK);
+        var exit = Math.random() < 0.5 ? [rnd(0.1, 0.9) * W, -200] : Math.random() < 0.5 ? [-200, rnd(0.1, 0.5) * H] : [W + 200, rnd(0.1, 0.5) * H];
+        var turnTo = function (ang, gain) {                                  /* turn rate that eases the heading toward ang */
+          var d = ang - hd; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
+          return Math.max(-KMAX * 1.4, Math.min(KMAX * 1.4, d * gain));
+        };
+        for (var s = 0; s < 4000; s++) {
+          var want;
+          if (loopAt >= 0 && s >= loopAt && s < loopAt + loopLen) want = loopDir * loopK;      /* the loop-the-loop */
+          else if (s < cruise) {
+            want = a1 * Math.sin(w1 * s + p1) + a2 * Math.sin(w2 * s + p2);
+            /* near an edge: lean back toward the middle, harder the closer it gets */
+            var m = 0.14 * M, edge = Math.max(0, m - px, px - (W - m), m - py, py - (H - m)) / m;
+            if (edge > 0) want = want * (1 - Math.min(1, edge)) + turnTo(Math.atan2(H * 0.45 - py, W / 2 - px), 0.08) * Math.min(1, edge * 1.5);
+          } else want = turnTo(Math.atan2(exit[1] - py, exit[0] - px), 0.05);
+          k += (want - k) * 0.08;                                        /* turns change smoothly, never snap */
+          hd += k; px += Math.cos(hd) * V; py += Math.sin(hd) * V;
+          path.push([px, py, hd]);
+          if (s > cruise && (px < -120 || px > W + 120 || py < -120 || py > H + 120)) break;
+        }
+
+        /* draw it frame by frame, so the contrail stays glued to the tail */
+        var cv = document.createElement('canvas'), ctx = cv.getContext('2d'), dpr = Math.min(2, window.devicePixelRatio || 1);
+        cv.className = 'fx-prop fx-contrail'; cv.setAttribute('aria-hidden', 'true');
+        cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + 'px'; cv.style.height = H + 'px';
+        document.body.insertBefore(cv, p); ctx.scale(dpr, dpr);
+        var perMs = M * 0.0009 / V, len = path.length, tail = Math.round(1400 * perMs), t0 = performance.now();
+        var half = p.offsetWidth / 2, sparks = [], R = function (a, b) { return a + Math.random() * (b - a); };
+        function star(x0, y0, r0, rot) {   /* a four-pointed glint */
+          ctx.beginPath();
+          for (var n = 0; n < 8; n++) {
+            var ang = rot + n * Math.PI / 4, rad = n % 2 ? r0 * 0.32 : r0;
+            ctx[n ? 'lineTo' : 'moveTo'](x0 + Math.cos(ang) * rad, y0 + Math.sin(ang) * rad);
+          }
+          ctx.closePath(); ctx.fill();
+        }
+        (function frame(now) {
+          /* g keeps counting after the plane has gone, so the contrail and sparks fade out on their own */
+          var g = (now - t0) * perMs, f = Math.min(len - 1, g), i = Math.floor(f), flying = g < len - 1;
+          if (flying) {
+            var q = path[i], r = path[Math.min(len - 1, i + 1)], u = f - i;
+            var cx = q[0] + (r[0] - q[0]) * u, cy = q[1] + (r[1] - q[1]) * u;
+            var fadeIn = Math.min(1, f / 25), sc = 0.3 + 0.7 * fadeIn;
+            p.style.opacity = fadeIn;
+            p.style.transform = 'translate(' + (cx - half) + 'px,' + (cy - half) + 'px) rotate(' + (q[2] * 180 / Math.PI + 43).toFixed(1) + 'deg) scale(' + sc.toFixed(2) + ')';
+            /* glitter shaken off the tail */
+            if (f > 20) for (var n = Math.random() < 0.6 ? 2 : 1; n > 0; n--) {
+              sparks.push({ x: cx - Math.cos(q[2]) * 24 + R(-5, 5), y: cy - Math.sin(q[2]) * 24 + R(-5, 5),
+                            vx: -Math.cos(q[2]) * 0.6 + R(-0.5, 0.5), vy: R(-0.4, 0.3), r: R(1.6, 4.2), rot: R(0, 6.28), vr: R(-0.08, 0.08),
+                            life: 0, max: R(55, 115), ph: R(0, 6.28), c: ['255,250,236', '243,214,150', '217,185,122', '255,255,255'][Math.random() * 4 | 0] });
+            }
+          } else if (p.isConnected) p.remove();
+          ctx.clearRect(0, 0, W, H);
+          /* contrail: a tapering streak, widest and brightest right behind the plane */
+          ctx.lineCap = 'round';
+          for (var j = Math.max(0, Math.floor(g - tail)); j < Math.min(g, len - 1); j += 2) {
+            var age = (g - j) / tail, a = (1 - age) * (1 - age), nx = path[Math.min(len - 1, j + 2)];
+            ctx.beginPath(); ctx.moveTo(path[j][0], path[j][1]); ctx.lineTo(nx[0], nx[1]);
+            ctx.strokeStyle = 'rgba(205,168,98,' + (0.55 * a).toFixed(3) + ')'; ctx.lineWidth = 1 + 6 * (1 - age); ctx.stroke();
+            ctx.strokeStyle = 'rgba(255,250,236,' + (0.95 * a).toFixed(3) + ')'; ctx.lineWidth = 0.5 + 1.8 * (1 - age); ctx.stroke();
+          }
+          /* the sparks drift down, twinkle and fade */
+          ctx.shadowColor = 'rgba(255,214,140,.9)'; ctx.shadowBlur = 6;
+          sparks = sparks.filter(function (sp) {
+            sp.life++; sp.vy += 0.035; sp.vx *= 0.985; sp.x += sp.vx; sp.y += sp.vy; sp.rot += sp.vr;
+            var k = sp.life / sp.max; if (k >= 1) return false;
+            ctx.fillStyle = 'rgba(' + sp.c + ',' + ((1 - k) * (0.55 + 0.45 * Math.sin(sp.life * 0.45 + sp.ph))).toFixed(3) + ')';
+            star(sp.x, sp.y, sp.r * (1 - k * 0.4), sp.rot);
+            return true;
+          });
+          ctx.shadowBlur = 0;
+          if (flying || sparks.length || g - tail < len) requestAnimationFrame(frame);
+          else cv.remove();
+        })(t0);
+        setTimeout(function () { FX.sparkle(x, y - 40); }, 300);
+      },
+      /* a paper sky lantern lifts off on a random breeze and floats out of sight,
+         with a couple of smaller ones rising far away behind it */
+      wish: function (x, y) {
+        var W = window.innerWidth, H = window.innerHeight, rnd = function (a, b) { return a + Math.random() * (b - a); };
+        var LANTERN = '<span class="glow"></span><svg viewBox="0 0 60 84"><defs>' +
+          '<radialGradient id="lnPaper" cx="50%" cy="78%" r="75%"><stop offset="0" stop-color="#fff6d6"/><stop offset=".35" stop-color="#ffd27a"/><stop offset=".7" stop-color="#f39445"/><stop offset="1" stop-color="#c8562b"/></radialGradient>' +
+          '<radialGradient id="lnFlame" cx="50%" cy="60%" r="50%"><stop offset="0" stop-color="#fffbe8"/><stop offset=".5" stop-color="#ffe08a"/><stop offset="1" stop-color="#ff9a3c" stop-opacity="0"/></radialGradient></defs>' +
+          '<path d="M9 8 Q30 1 51 8 L45 70 Q30 74 15 70 Z" fill="url(#lnPaper)"/>' +
+          '<path d="M20 5 Q22 40 22 72 M30 3.5 V73.5 M40 5 Q38 40 38 72" stroke="#b34a22" stroke-opacity=".22" stroke-width="1" fill="none"/>' +
+          '<path d="M9 8 Q30 1 51 8" stroke="#b34a22" stroke-opacity=".35" stroke-width="1.2" fill="none"/>' +
+          '<ellipse cx="30" cy="71" rx="15.5" ry="3" fill="none" stroke="#7a3020" stroke-opacity=".7" stroke-width="1.2"/>' +
+          '<ellipse class="flame" cx="30" cy="69" rx="6" ry="8" fill="url(#lnFlame)"/></svg>';
+        function release(x0, y0, size, delay, dim) {
+          var l = prop('fx-lantern' + (dim ? ' far' : ''), LANTERN);
+          l.style.width = (60 * size) + 'px'; l.style.height = (84 * size) + 'px';
+          /* the breeze: a drift to one side, a sway, and how fast it climbs */
+          var drift = rnd(-0.32, 0.32) * W, sway = rnd(14, 38) * size, waves = rnd(1.5, 3.2), ph = rnd(0, 6.28);
+          var top = -84 * size - 40, keys = [], N = 24;
+          for (var i = 0; i <= N; i++) {
+            var k = i / N, ease = Math.pow(k, 1.45);
+            var px = x0 + drift * k + Math.sin(k * waves * 6.28 + ph) * sway * (0.3 + k);
+            px = Math.max(30, Math.min(W - 30, px));
+            var tilt = Math.cos(k * waves * 6.28 + ph) * 7;
+            keys.push({ transform: at(l, px, y0 + (top - y0) * ease) + ' rotate(' + tilt.toFixed(1) + 'deg) scale(' + (1 - k * 0.5).toFixed(2) + ')',
+                        opacity: i === 0 ? 0 : i === N ? 0 : i === 1 ? 1 : 1, offset: k });
+          }
+          gone(l.animate(keys, { duration: rnd(5200, 6400) * (dim ? 1.25 : 1), delay: delay, easing: 'cubic-bezier(.3,0,.7,1)', fill: 'backwards' }), l);
+        }
+        release(x, y - 50, 1.4, 0, false);
+        for (var c = 0, m = 2 + (Math.random() * 2 | 0); c < m; c++) release(rnd(0.1, 0.9) * W, H + 60, rnd(0.35, 0.55), rnd(500, 1800), true);
+        FX.embers(x, y - 40, 70);
+        setTimeout(function () { FX.embers(x, y - 260, 40); }, 1400);
+      }
+    };
+
+    /* ---- saving ----------------------------------------------------- */
+    var local = /^(localhost|127\.0\.0\.1|\[::1\]|)$/.test(location.hostname);
+    function save(payload) {
+      /* previews on this computer never write to the real database */
+      if (local) { console.info('[booth] preview only, not saved:', payload); return new Promise(function (r) { setTimeout(r, 350); }); }
+      var store = CFG.rsvpStore || {};
+      if (!store.projectId || !store.apiKey) return Promise.reject(new Error('not connected'));
+      var id = '', abc = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      var rnd = (window.crypto && crypto.getRandomValues) ? crypto.getRandomValues(new Uint8Array(20)) : null;
+      for (var k = 0; k < 20; k++) id += abc[rnd ? rnd[k] % abc.length : Math.floor(Math.random() * abc.length)];
+      var fields = {};
+      Object.keys(payload).forEach(function (key) { if (payload[key] !== '') fields[key] = { stringValue: payload[key] }; });
+      var root = 'projects/' + store.projectId + '/databases/(default)/documents';
+      /* create-only, with the server's own timestamp (the security rules insist on both) */
+      return fetch('https://firestore.googleapis.com/v1/' + root + ':commit?key=' + encodeURIComponent(store.apiKey), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ writes: [{
+          update: { name: root + '/requests/' + id, fields: fields },
+          currentDocument: { exists: false },
+          updateTransforms: [{ fieldPath: 'createdAt', setToServerValue: 'REQUEST_TIME' }]
+        }] })
+      }).then(function (res) { if (!res.ok) throw new Error('rejected'); });
+    }
     function mailtoFallback() {
-      if (!CFG.contactEmail) return '';
-      return ' Please email <a href="mailto:' + CFG.contactEmail + '">' + CFG.contactEmail + '</a> instead.';
+      return CFG.contactEmail ? ' Please email <a href="mailto:' + CFG.contactEmail + '">' + CFG.contactEmail + '</a> instead.' : '';
     }
 
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      if (busy) return;
       msg.hidden = true;
+      var f = form.elements, K = KIND[kind];
+      var name = f.name.value.trim(), main = f[K.field].value.trim();
+      if (!name) { show('Please tell us your name.', true); f.name.focus(); return; }
+      if (!main) { show(K.empty, true); f[K.field].focus(); return; }
+      if (f.website.value) return;   /* spam trap tripped: drop it quietly */
 
-      /* --- validation ------------------------------------------------ */
-      var f = form.elements;
-      var name = f.name.value.trim();
-      var email = f.email.value.trim();
-      var attending = form.querySelector('input[name="attending"]:checked');
-
-      if (!name)       { show('Please tell us your name.', true); f.name.focus(); return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        show('That email address doesn’t look right.', true); f.email.focus(); return;
-      }
-      if (!attending)  { show('Please let us know whether you can make it.', true); return; }
-      if (f.website.value) { return; }  /* honeypot tripped — silently drop */
-
-      /* --- gather ---------------------------------------------------- */
-      var coming = attending.value.indexOf('Joyfully') === 0;
-      var payload = {
-        name: name,
-        email: email,
-        attending: attending.value,
-        phone: coming ? f.phone.value.trim() : '',
-        dietary: coming ? f.dietary.value.trim() : '',
-        song: coming ? f.song.value.trim() : '',
-        message: f.message.value.trim(),
-        submittedAt: new Date().toISOString()
-      };
-
-      var store = CFG.rsvpStore || {};
-      if (!store.projectId || !store.apiKey) {
-        show('The RSVP form isn’t connected yet.' + mailtoFallback(), true);
+      /* the dare: a notorious song gets one "are you sure?" first */
+      var chaos = kind === 'song' && BANNED.test(main);
+      if (chaos && !dared) {
+        dared = true;
+        sendIco.textContent = '😏'; sendText.textContent = 'Bold choice. Sure?';
+        send.classList.remove('dare'); void send.offsetWidth; send.classList.add('dare');
+        show('That one is famous for clearing dance floors (or starting a stampede). Press again if you really mean it.');
         return;
       }
 
-      /* --- send ------------------------------------------------------
-         Straight into the planner's Firestore via its REST API, so no
-         Firebase library is needed on this page. The document id is made
-         here, "exists: false" makes it create-only, and the timestamp is
-         stamped by the server (the security rules insist on that). */
-      submit.disabled = true;
-      submit.textContent = 'Sending…';
+      var payload = {
+        kind: kind, name: name,
+        song: kind === 'song' ? main : '',
+        dedication: kind === 'song' ? f.dedication.value.trim() : '',
+        text: kind === 'song' ? '' : main,
+        submittedAt: new Date().toISOString()
+      };
 
-      var id = '';
-      var abc = 'abcdefghijklmnopqrstuvwxyz0123456789';
-      var rnd = (window.crypto && crypto.getRandomValues) ? crypto.getRandomValues(new Uint8Array(20)) : null;
-      for (var k = 0; k < 20; k++) id += abc[rnd ? rnd[k] % abc.length : Math.floor(Math.random() * abc.length)];
-
-      var fields = {};
-      Object.keys(payload).forEach(function (key) {
-        if (payload[key] !== '') fields[key] = { stringValue: payload[key] };
+      busy = true; send.disabled = true;
+      var r = send.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+      if (!reduced) PLAY[kind](x, y, chaos);
+      var wait = new Promise(function (res) { setTimeout(res, reduced ? 0 : kind === 'wish' ? 2200 : 1800); });
+      Promise.all([save(payload), wait]).then(function () {
+        busy = false;
+        tally[kind]++;
+        $('.done-ico', done).innerHTML = chaos ? '<span class="emo">🕺</span>' : icon(K.icon);
+        $('#doneTitle').textContent = chaos ? 'Okay, you asked for it!' : K.title;
+        $('#doneText').textContent = chaos ? 'It’s in the queue. Stretch first, you have been warned.' : K.text;
+        var t = $('#doneTally');
+        t.hidden = tally[kind] < 2;
+        t.textContent = 'That’s ' + tally[kind] + ' ' + K.unit[1] + ' from you so far ' + (kind === 'song' ? '🎶' : '✨');
+        morph(function () { form.hidden = true; done.hidden = false; });
+        var d = $('.done-ico', done); d.style.animation = 'none'; void d.offsetWidth; d.style.animation = '';
+        resetSend();
+      }).catch(function () {
+        busy = false; resetSend();
+        show('Something went wrong sending that.' + mailtoFallback(), true);
       });
-      var root = 'projects/' + store.projectId + '/databases/(default)/documents';
-
-      fetch('https://firestore.googleapis.com/v1/' + root + ':commit?key=' + encodeURIComponent(store.apiKey), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ writes: [{
-          update: { name: root + '/rsvps/' + id, fields: fields },
-          currentDocument: { exists: false },
-          updateTransforms: [{ fieldPath: 'createdAt', setToServerValue: 'REQUEST_TIME' }]
-        }] })
-      })
-        .then(function (res) { return { ok: res.ok }; })
-        .then(function (res) {
-          if (!res.ok) throw new Error('rejected');
-          form.hidden = true;
-          thanks.hidden = false;
-          if (!coming) {
-            $('#thanksText').textContent =
-              'Thank you for letting us know. You will be missed — we will raise a glass to you.';
-          }
-          thanks.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
-        })
-        .catch(function () {
-          submit.disabled = false;
-          submit.textContent = 'Send RSVP';
-          show('Something went wrong sending that.' + mailtoFallback(), true);
-        });
     });
-  })();
 
+    function clearKind() {
+      var K = KIND[kind];
+      form.elements[K.field].value = '';
+      if (kind === 'song') form.elements.dedication.value = '';
+    }
+    $('#boothAgain').addEventListener('click', function () { clearKind(); pick(kind, true); });
+    $('#boothOther').addEventListener('click', function () {
+      clearKind();
+      var next = tiles[(tiles.findIndex(function (t) { return t.dataset.kind === kind; }) + 1) % tiles.length];
+      pick(next.dataset.kind); next.focus({ preventScroll: true });
+    });
+
+    /* ---- the crate -------------------------------------------------
+       A row of ideas for whichever tile is chosen: album sleeves for
+       songs, notecards for the rest. Flip through, tap one, and it's
+       written into the form for you. */
+    var Crate = (function () {
+      var box = $('#crate'), row = $('#crateRow');
+      if (!box || !row) return { show: function () {} };
+      var EXTRA = CFG.boothIdeas || {};
+      var SETS = {
+        song: (CFG.songIdeas || []).map(function (s) { return { g: s[0], label: s[1], sub: s[2], fill: s[2] + ' — ' + s[1] }; })
+      };
+      ['suggestion', 'wish'].forEach(function (k) {
+        SETS[k] = (EXTRA[k] || []).map(function (s) { return { g: s[0], label: s[1], sub: s[2], fill: s[2] }; });
+      });
+      var LINES = {
+        song: 'Need inspiration? <small>Tap a record to request it.</small>',
+        suggestion: 'Short on ideas? <small>Tap one to use it, or a few.</small>',
+        wish: 'Lost for words? <small>Borrow one of these.</small>'
+      };
+      var filterBox = $('.crate-filter', box), prev = $('.crate-nav.prev', box), next = $('.crate-nav.next', box);
+      var cur = 'song', genre = 'all', lastFill = '', order = [];
+
+      function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+      function shuffled(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = (Math.random() * (i + 1)) | 0, t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+      function hash(t) { var h = 0; for (var i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0; return Math.abs(h); }
+      function groups() { var out = []; (SETS[cur] || []).forEach(function (s) { if (out.indexOf(s.g) < 0) out.push(s.g); }); return out; }
+      function field() { return form.elements[KIND[cur].field]; }
+
+      function card(idea, i) {
+        var gi = groups().indexOf(idea.g), aria;
+        if (cur === 'song') {
+          aria = 'Request ' + idea.label + ' by ' + idea.sub;
+          return '<button type="button" class="pick sleeve g' + (gi % 5) + ' m' + (hash(idea.label) % 4) + '" data-i="' + i + '" aria-label="' + esc(aria) + '">' +
+            '<span class="jacket"><span class="disc" aria-hidden="true"></span>' +
+            '<span class="cover"><span class="art"></span><i>' + esc(idea.g) + '</i><b>' + esc(idea.label) + '</b></span></span>' +
+            '<span class="who">' + esc(idea.sub) + '</span></button>';
+        }
+        aria = 'Use: ' + idea.fill;
+        return '<button type="button" class="pick notecard" data-i="' + i + '" aria-label="' + esc(aria) + '">' +
+          '<i>' + esc(idea.g) + '</i><b>' + esc(idea.label) + '</b><span>' + esc(idea.sub) + '</span></button>';
+      }
+      function render() {
+        var list = SETS[cur] || [];
+        var shown = order.filter(function (i) { return genre === 'all' || list[i].g === genre; });
+        row.innerHTML = shown.map(function (i) { return card(list[i], i); }).join('');
+        row.scrollLeft = 0;
+        mark(); arrows();
+        if (!reduced) $$('.pick', row).forEach(function (el, k) {
+          if (k > 8) return;
+          el.animate([{ opacity: 0, transform: 'translateY(14px)' }, { opacity: 1, transform: 'none' }],
+                     { duration: 450, delay: k * 45, easing: 'cubic-bezier(.22,.61,.36,1)', fill: 'backwards' });
+        });
+      }
+      function buildFilters() {
+        filterBox.innerHTML = ['all'].concat(groups()).map(function (g) {
+          return '<button type="button" data-g="' + esc(g) + '" aria-pressed="' + (g === genre) + '">' + (g === 'all' ? 'All' : esc(g)) + '</button>';
+        }).join('');
+        $('#crateLine').innerHTML = LINES[cur];
+      }
+      /* a gold tick on every idea already written into the form */
+      function mark() {
+        var v = (field() && field().value) || '', list = SETS[cur] || [];
+        $$('.pick', row).forEach(function (el) { el.classList.toggle('in-use', v.indexOf(list[el.dataset.i].fill) >= 0); });
+      }
+      function arrows() {
+        prev.disabled = row.scrollLeft < 8;
+        next.disabled = row.scrollLeft + row.clientWidth > row.scrollWidth - 8;
+      }
+      row.addEventListener('scroll', arrows, { passive: true });
+      window.addEventListener('resize', arrows);
+      [prev, next].forEach(function (b, d) {
+        b.addEventListener('click', function () { row.scrollBy({ left: (d ? 1 : -1) * row.clientWidth * 0.8, behavior: reduced ? 'auto' : 'smooth' }); });
+      });
+      filterBox.addEventListener('click', function (e) {
+        var b = e.target.closest('button'); if (!b) return;
+        genre = b.dataset.g;
+        $$('button', filterBox).forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+        render();
+      });
+      $('#crateShuffle').addEventListener('click', function () { order = shuffled(order); render(); });
+      form.addEventListener('input', function (e) { if (e.target === field()) mark(); });
+
+      row.addEventListener('click', function (e) {
+        var el = e.target.closest('.pick'); if (!el) return;
+        var idea = SETS[cur][el.dataset.i], f = field();
+        if (cur === 'song' || !f.value.trim() || f.value === lastFill) f.value = idea.fill;
+        else if (f.value.indexOf(idea.fill) < 0) f.value = f.value.replace(/\s+$/, '') + '\n' + idea.fill;   /* add to what they wrote */
+        lastFill = f.value;
+        f.dispatchEvent(new Event('input', { bubbles: true }));
+        if (reduced) { flash(f); return; }
+        /* a copy of the card lifts up into the field */
+        var from = (el.querySelector('.cover') || el).getBoundingClientRect(), to = f.getBoundingClientRect();
+        var ghost = (el.querySelector('.cover') || el).cloneNode(true);
+        ghost.classList.add('pick-fly'); ghost.classList.add.apply(ghost.classList, el.className.split(' '));
+        ghost.classList.remove('in-use');
+        ghost.style.cssText += ';left:' + from.left + 'px;top:' + from.top + 'px;width:' + from.width + 'px;height:' + from.height + 'px;';
+        document.body.appendChild(ghost);
+        var tx = to.left + 24 - from.left, ty = to.top + Math.min(to.height / 2, 22) - from.top - from.height / 2;
+        var a = ghost.animate([
+          { transform: 'translate(0,0) scale(1)', opacity: 1 },
+          { transform: 'translate(' + tx + 'px,' + ty + 'px) scale(.18)', opacity: 0 }
+        ], { duration: 520, easing: 'cubic-bezier(.5,0,.2,1)' });
+        a.onfinish = function () { ghost.remove(); flash(f); };
+      });
+      function flash(f) {
+        f.classList.remove('filled'); void f.offsetWidth; f.classList.add('filled');
+        var r = f.getBoundingClientRect();
+        if (r.top < 70 || r.bottom > window.innerHeight) f.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+      }
+
+      return {
+        show: function (kind) {
+          cur = kind; genre = 'all'; lastFill = '';
+          var list = SETS[cur] || [];
+          box.hidden = !list.length;
+          if (!list.length) return;
+          order = shuffled(list.map(function (_, i) { return i; }));
+          buildFilters(); render();
+        }
+      };
+    })();
+    pick('song');
+  })();
 })();

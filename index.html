@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sanchari &amp; Suvodeep — December 11–14, 2026 · Gatlinburg, Tennessee</title>
-<meta name="description" content="Sanchari and Suvodeep are getting married at Blue Cedar Lodge in Gatlinburg, Tennessee, December 11–14, 2026. Weekend itinerary, travel details and RSVP.">
+<meta name="description" content="Sanchari and Suvodeep are getting married at Blue Cedar Lodge in Gatlinburg, Tennessee, December 11–14, 2026. Weekend itinerary, travel details and a request booth for songs, ideas and wishes.">
 <meta name="theme-color" content="#2d4a3e">
 
 <meta property="og:type" content="website">
@@ -23,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400;1,600&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/css/styles.css?v=5">
+<link rel="stylesheet" href="assets/css/styles.css?v=24">
 <script>document.documentElement.classList.add("js")</script>
 </head>
 <body>
@@ -55,7 +55,7 @@
       <li><a href="#travel">Travel</a></li>
       <li><a href="#gallery">Gallery</a></li>
       <li><a href="#faq">FAQ</a></li>
-      <li><a class="nav-cta" href="#rsvp">RSVP</a></li>
+      <li><a class="nav-cta" href="#requests">Requests 🎶</a></li>
     </ul>
   </nav>
   <button class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="navLinks">
@@ -427,7 +427,7 @@
         <p>Everyone is staying at Blue Cedar Lodge, and the whole weekend happens
            there. No need to book anything &mdash; we have a room for you.</p>
         <p>Check-in is from 4:00 pm on Friday, and we will have the keys waiting.
-           Just let us know you are coming in the RSVP and we will take it from there.</p>
+           If you need anything special, email us at <a class="js-email" href="#">our address</a> and we will take it from there.</p>
       </article>
 
       <article class="card fade-in d2">
@@ -473,89 +473,117 @@
   </div>
 </section>
 
-<!-- ============================== rsvp ============================== -->
-<section id="rsvp" class="bg-cream">
+<!-- ============================ requests ============================ -->
+<section id="requests" class="bg-indigo booth-section">
+  <div class="booth-stars" aria-hidden="true"></div>
+  <span id="rsvp" class="anchor" aria-hidden="true"></span>
   <div class="wrap">
     <div class="center">
-      <p class="eyebrow fade-in">Will you join us?</p>
-      <h2 class="section-title fade-in d1">RSVP</h2>
+      <p class="eyebrow fade-in">Your turn</p>
+      <h2 class="section-title fade-in d1">The Request Booth</h2>
       <div class="rule fade-in d1"></div>
-      <p class="lede narrow fade-in d2" style="margin-bottom:2.4rem">
-        Kindly respond by <strong id="rsvpDeadline">November 1, 2026</strong>.
+      <p class="lede narrow fade-in d2">
+        Pick a tile and make your mark: a song for the dance floor, an idea for the weekend,
+        or a few words for the two of us. We read every single one.
       </p>
+
     </div>
 
-    <div class="rsvp-card fade-in d2">
-      <form id="rsvpForm" novalidate>
-        <div class="row">
-          <div class="field">
-            <label for="name">Your name</label>
-            <input id="name" name="name" type="text" autocomplete="name" required placeholder="First and last name">
-          </div>
-          <div class="field">
-            <label for="email">Email address</label>
-            <input id="email" name="email" type="email" autocomplete="email" required placeholder="you@example.com">
-          </div>
-        </div>
-
-        <fieldset>
-          <p class="legend" id="attendingLabel">Will you be joining us?</p>
-          <div class="choices" role="radiogroup" aria-labelledby="attendingLabel">
-            <label class="choice">
-              <input type="radio" name="attending" value="Joyfully accepts" required>
-              <span>Joyfully accepts</span>
-            </label>
-            <label class="choice choice-decline">
-              <input type="radio" name="attending" value="Regretfully declines">
-              <span>Regretfully declines</span>
-            </label>
-          </div>
-          <p class="sr" id="shyNote" aria-live="polite"></p>
-        </fieldset>
-
-        <div id="ifAttending">
-          <div class="field">
-            <label for="phone">Phone <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
-            <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="For day-of logistics">
-          </div>
-
-          <div class="field">
-            <label for="dietary">Dietary restrictions or allergies</label>
-            <input id="dietary" name="dietary" type="text" placeholder="Vegetarian, vegan, nut allergy&hellip;">
-          </div>
-
-          <div class="field">
-            <label for="song">A song that will get you on the dance floor</label>
-            <input id="song" name="song" type="text" placeholder="Artist &mdash; Title">
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="message">A note for the couple</label>
-          <textarea id="message" name="message" placeholder="Blessings, advice, or a prediction for the first dance&hellip;"></textarea>
-        </div>
-
-        <!-- spam trap: real guests never see or fill this -->
-        <div class="hp" aria-hidden="true">
-          <label for="website">Leave this empty</label>
-          <input id="website" name="website" type="text" tabindex="-1" autocomplete="off">
-        </div>
-
-        <div style="margin-top:1.8rem">
-          <button class="btn btn-block" type="submit" id="rsvpSubmit">Send RSVP</button>
-        </div>
-
-        <div class="form-msg" id="formMsg" role="status" hidden></div>
-      </form>
-
-      <div class="sent" id="rsvpThanks" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-        </svg>
-        <h3>Thank you!</h3>
-        <p class="lede" id="thanksText">We have your response. We cannot wait to see you in the mountains.</p>
+    <div class="booth fade-in d2">
+      <div class="tiles" role="tablist" aria-label="What would you like to send?">
+        <button class="tile t-song" type="button" role="tab" data-kind="song" aria-selected="true">
+          <span class="badge"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span><b>Song request</b><small>Get us all dancing</small>
+        </button>
+        <button class="tile t-idea" type="button" role="tab" data-kind="suggestion" aria-selected="false">
+          <span class="badge"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21.5h4"/><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.7V18h6v-2c0-.7.3-1.3.8-1.7A6.5 6.5 0 0 0 12 2.5z"/></svg></span><b>Suggestion</b><small>Games, food, adventures</small>
+        </button>
+        <button class="tile t-wish" type="button" role="tab" data-kind="wish" aria-selected="false">
+          <span class="badge"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 5.1a5.2 5.2 0 0 0-7.4 0L12 6.1l-1-1a5.2 5.2 0 0 0-7.4 7.4l1 1L12 21l7.4-7.5 1-1a5.2 5.2 0 0 0 0-7.4z"/></svg></span><b>Wish for us</b><small>Advice &amp; blessings</small>
+        </button>
       </div>
+
+      <div class="booth-card">
+        <form id="boothForm" novalidate>
+          <div class="booth-head">
+            <h3 id="boothPrompt">What gets you on the dance floor?</h3>
+            <p id="boothHint">Tell us the song. We&rsquo;ll make sure the DJ (us) plays it.</p>
+          </div>
+          <div class="field">
+            <label for="bName">Your name</label>
+            <input id="bName" name="name" type="text" autocomplete="name" required placeholder="So we know who to thank">
+          </div>
+
+          <div class="panel" data-panel="song">
+            <div class="row">
+              <div class="field">
+                <label for="bSong">The song</label>
+                <input id="bSong" name="song" type="text" placeholder="Artist &mdash; Title">
+              </div>
+              <div class="field">
+                <label for="bFor">Dedicate it to <span class="opt">(optional)</span></label>
+                <input id="bFor" name="dedication" type="text" placeholder="The bride, your partner, the aunties&hellip;">
+              </div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="suggestion" hidden>
+            <div class="field">
+              <label for="bIdea">Your idea</label>
+              <textarea id="bIdea" name="idea" placeholder="A hike we should take, a game for the fireside, a dish we have to try&hellip;"></textarea>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="wish" hidden>
+            <div class="field">
+              <label for="bWish">Your wish for us</label>
+              <textarea id="bWish" name="wish" placeholder="Blessings, marriage advice, or a bold prediction for the first dance&hellip;"></textarea>
+            </div>
+          </div>
+
+          <div class="crate" id="crate">
+            <div class="crate-bar">
+              <p class="crate-line" id="crateLine">Need inspiration?</p>
+              <div class="crate-tools">
+                <div class="crate-filter" role="group" aria-label="Kinds of ideas"></div>
+                <button type="button" class="crate-shuffle" id="crateShuffle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>Shuffle</button>
+              </div>
+            </div>
+            <div class="crate-view">
+              <button type="button" class="crate-nav prev" aria-label="Scroll back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <div class="crate-row" id="crateRow"></div>
+              <button type="button" class="crate-nav next" aria-label="Scroll on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button>
+            </div>
+          </div>
+
+          <!-- spam trap: real guests never see or fill this -->
+          <div class="hp" aria-hidden="true">
+            <label for="bSite">Leave this empty</label>
+            <input id="bSite" name="website" type="text" tabindex="-1" autocomplete="off">
+          </div>
+
+          <button class="btn btn-block send" type="submit" id="boothSend"><span class="send-ico" aria-hidden="true"></span><span class="send-text">Drop the needle</span></button>
+          <div class="form-msg" id="boothMsg" role="status" hidden></div>
+        </form>
+
+        <template id="boothIcons"><i data-k="song"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></i><i data-k="idea"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 21.5h4"/><path d="M12 2.5a6.5 6.5 0 0 0-3.8 11.8c.5.4.8 1 .8 1.7V18h6v-2c0-.7.3-1.3.8-1.7A6.5 6.5 0 0 0 12 2.5z"/></svg></i><i data-k="wish"><svg class="" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.4 5.1a5.2 5.2 0 0 0-7.4 0L12 6.1l-1-1a5.2 5.2 0 0 0-7.4 7.4l1 1L12 21l7.4-7.5 1-1a5.2 5.2 0 0 0 0-7.4z"/></svg></i></template>
+        <div class="booth-done" id="boothDone" hidden>
+          <div class="done-ico" aria-hidden="true"></div>
+          <h3 id="doneTitle">Needle&rsquo;s down!</h3>
+          <p class="lede" id="doneText">Your song is in the queue. See you on the dance floor.</p>
+          <p class="done-tally" id="doneTally" hidden></p>
+          <div class="done-actions">
+            <button class="btn" type="button" id="boothAgain">Send another</button>
+            <button class="btn btn-line" type="button" id="boothOther">Pick another tile</button>
+          </div>
+        </div>
+      </div>
+      <p class="closed-note">RSVPs are closed &mdash; thank you! Missed it? Email us at
+        <a id="closedEmail" href="#">our address</a>.</p>
     </div>
+  </div>
+  <div class="booth-ridges" aria-hidden="true">
+    <svg viewBox="0 150 1440 350" preserveAspectRatio="none"><use href="#r2" fill="#ffffff" fill-opacity=".08"/></svg>
+    <svg viewBox="0 150 1440 350" preserveAspectRatio="none"><use href="#r1" fill="#f2f4fa"/></svg>
   </div>
 </section>
 
@@ -580,8 +608,8 @@
       </details>
       <details>
         <summary>Can I bring a plus-one or my children?</summary>
-        <div class="answer"><p>Yes! Plus-ones and children are all welcome. Just add them to your
-        RSVP so we can save a bed, and a plate, for everyone.</p></div>
+        <div class="answer"><p>Yes! Plus-ones and children are all welcome. If anyone new is coming
+        along, email us at <a class="js-email" href="#">our address</a> so we can save a bed, and a plate, for everyone.</p></div>
       </details>
       <details>
         <summary>What should I wear?</summary>
@@ -630,9 +658,9 @@
   </svg>
 </button>
 
-<script src="assets/js/config.js?v=2"></script>
+<script src="assets/js/config.js?v=6"></script>
 <script src="assets/js/gallery.js"></script>
 <script src="assets/js/weather.js"></script>
-<script src="assets/js/main.js"></script>
+<script src="assets/js/main.js?v=30"></script>
 </body>
 </html>
