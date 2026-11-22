@@ -1243,8 +1243,8 @@
         var x = new XMLHttpRequest();
         x.open('POST', pb.api.replace(/\/$/, '') + '/photo/upload');
         x.setRequestHeader('X-Photo-Key', key);
-        x.setRequestHeader('X-Name', encodeURIComponent($('#pbName').value.trim()));
-        x.setRequestHeader('X-Message', encodeURIComponent($('#pbMsg').value.trim()));
+        x.setRequestHeader('X-Name', encodeURIComponent(item.name));
+        x.setRequestHeader('X-Message', encodeURIComponent(item.message));
         if (prepared.taken) x.setRequestHeader('X-Taken', prepared.taken);
         x.upload.onprogress = function (e) { if (e.lengthComputable) progress(item, e.loaded / e.total); };
         x.onload = function () {
@@ -1282,18 +1282,42 @@
         })(item);
       }
     }
+    /* chosen photos wait in a tray (with a remove button) until Send is pressed */
+    var picked = [], sendBtn = $('#pbSend'), msg = $('#pbNeedName');
+    function tray() {
+      var n = picked.length;
+      sendBtn.hidden = !n;
+      sendBtn.querySelector('span').textContent = n === 1 ? 'Send 1 photo' : 'Send ' + n + ' photos';
+    }
     function add(files) {
       thanks.hidden = true;
       Array.prototype.slice.call(files || []).filter(function (f) { return /^image\//.test(f.type) || /\.(heic|heif)$/i.test(f.name); }).forEach(function (file) {
-        var li = document.createElement('li'), img = document.createElement('img');
+        var li = document.createElement('li'), img = document.createElement('img'), rm = document.createElement('button');
         img.alt = ''; img.src = URL.createObjectURL(file);
         img.onerror = function () { img.remove(); };               /* e.g. HEIC preview on a laptop */
-        li.appendChild(img); li.className = 'is-waiting';
+        rm.type = 'button'; rm.className = 'pb-remove'; rm.setAttribute('aria-label', 'Remove this photo'); rm.textContent = '✕';
+        li.appendChild(img); li.appendChild(rm); li.className = 'is-picked';
         list.appendChild(li);
-        waiting.push({ file: file, el: li });
+        var item = { file: file, el: li };
+        picked.push(item);
+        rm.addEventListener('click', function () { picked.splice(picked.indexOf(item), 1); li.remove(); tray(); });
       });
-      next();
+      tray();
     }
+    sendBtn.addEventListener('click', function () {
+      var name = $('#pbName').value.trim();
+      if (!name) { msg.hidden = false; $('#pbName').focus(); return; }
+      msg.hidden = true;
+      var message = $('#pbMsg').value.trim();
+      picked.splice(0).forEach(function (item) {
+        item.name = name; item.message = message;
+        var rm = item.el.querySelector('.pb-remove'); if (rm) rm.remove();
+        item.el.className = 'is-waiting';
+        waiting.push(item);
+      });
+      tray(); next();
+    });
+    $('#pbName').addEventListener('input', function () { msg.hidden = true; });
     ['#pbCamera', '#pbPick'].forEach(function (sel) {
       $(sel).addEventListener('change', function (e) { add(e.target.files); e.target.value = ''; });
     });
