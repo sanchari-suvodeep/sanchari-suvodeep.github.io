@@ -1173,4 +1173,130 @@
     })();
     pick('song');
   })();
+  /* ------------------------------------------------- the photo booth
+     Opens on CFG.photoBooth.opens (lodge time) and only for people who
+     arrived from a QR sign (?pb=<code>). Photos go to the Wedding HQ
+     service, which saves them to the wedding's Google Drive. */
+  (function photoBooth() {
+    var sec = $('#photos'), pb = CFG.photoBooth;
+    if (!sec || !pb) return;
+    var params = new URLSearchParams(location.search), key = params.get('pb') || '';
+    var local = /^(localhost|127\.0\.0\.1)$/.test(location.hostname), preview = local && params.get('pbpreview');
+    var day = new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    var test = /^test-/.test(key);                    /* the planner's test link works any day */
+    var state = preview ? (key || preview === 'demo' ? 'open' : 'scan')
+      : test ? 'open' : day < pb.opens ? 'soon' : day > pb.closes ? 'closed' : key ? 'open' : 'scan';
+    sec.dataset.state = state;
+    $$('.pb-state', sec).forEach(function (el) { el.hidden = el.dataset.show !== state; });
+    if (state !== 'open') return;
+    if (test) { var tb = document.createElement('p'); tb.className = 'pb-test'; tb.textContent = 'Test mode: photos are saved and marked as tests in the planner.'; $('#pbForm').prepend(tb); }
+
+    var list = $('#pbQueue'), thanks = $('#pbThanks'), waiting = [], running = 0, sent = 0, failed = 0;
+
+    /* when the photo was taken, from its EXIF data (JPEG), as YYYY-MM-DDTHH:MM:SS */
+    function takenAt(buf) {
+      try {
+        var v = new DataView(buf);
+        if (v.getUint16(0) !== 0xFFD8) return '';
+        for (var o = 2; o < v.byteLength - 4;) {
+          var mark = v.getUint16(o), len = v.getUint16(o + 2);
+          if (mark === 0xFFE1 && v.getUint32(o + 4) === 0x45786966) {          /* "Exif" */
+            var t = o + 10, le = v.getUint16(t) === 0x4949;
+            var u16 = function (p) { return v.getUint16(p, le); }, u32 = function (p) { return v.getUint32(p, le); };
+            var ifd = function (start, want) {
+              var n = u16(start);
+              for (var i = 0; i < n; i++) { var e = start + 2 + i * 12; if (u16(e) === want) return u32(e + 8); }
+              return 0;
+            };
+            var sub = ifd(t + u32(t + 4), 0x8769); if (!sub) return '';
+            var at = ifd(t + sub, 0x9003); if (!at) return '';
+            var str = ''; for (var k = 0; k < 19; k++) str += String.fromCharCode(v.getUint8(t + at + k));
+            var m = str.match(/^(\d{4}):(\d\d):(\d\d) (\d\d:\d\d:\d\d)$/);
+            return m ? m[1] + '-' + m[2] + '-' + m[3] + 'T' + m[4] : '';
+          }
+          if ((mark & 0xFF00) !== 0xFF00) break;
+          o += 2 + len;
+        }
+      } catch (e) { /* no date */ }
+      return '';
+    }
+    /* big or unusual files are re-saved as a 3600px JPEG so they upload quickly on lodge Wi-Fi */
+    function prepare(file) {
+      return file.slice(0, 256 * 1024).arrayBuffer().then(function (head) {
+        var taken = takenAt(head);
+        var ok = /^image\/(jpeg|png|webp)$/.test(file.type) && file.size <= 8 * 1024 * 1024;
+        if (ok || !window.createImageBitmap) return { blob: file, taken: taken };
+        return createImageBitmap(file).then(function (img) {
+          var k = Math.min(1, 3600 / Math.max(img.width, img.height)), c = document.createElement('canvas');
+          c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          return new Promise(function (res) { c.toBlob(function (b) { res({ blob: b || file, taken: taken }); }, 'image/jpeg', 0.9); });
+        }).catch(function () { return { blob: file, taken: taken }; });
+      });
+    }
+    function send(item, prepared) {
+      return new Promise(function (resolve, reject) {
+        if (preview === 'demo') {                       /* local preview: pretend, never send */
+          var p = 0, t = setInterval(function () { p += 0.2; progress(item, p); if (p >= 1) { clearInterval(t); resolve(); } }, 180);
+          return;
+        }
+        var x = new XMLHttpRequest();
+        x.open('POST', pb.api.replace(/\/$/, '') + '/photo/upload');
+        x.setRequestHeader('X-Photo-Key', key);
+        x.setRequestHeader('X-Name', encodeURIComponent($('#pbName').value.trim()));
+        x.setRequestHeader('X-Message', encodeURIComponent($('#pbMsg').value.trim()));
+        if (prepared.taken) x.setRequestHeader('X-Taken', prepared.taken);
+        x.upload.onprogress = function (e) { if (e.lengthComputable) progress(item, e.loaded / e.total); };
+        x.onload = function () {
+          var j = {}; try { j = JSON.parse(x.responseText); } catch (e) { /* not JSON */ }
+          x.status === 200 ? resolve() : reject(new Error(j.error || 'Could not send that one'));
+        };
+        x.onerror = function () { reject(new Error('No connection. Check the Wi-Fi and try again')); };
+        x.send(prepared.blob);
+      });
+    }
+    function progress(item, f) { item.el.style.setProperty('--p', Math.round(Math.min(1, f) * 100)); }
+    function next() {
+      while (running < 2 && waiting.length) {
+        var item = waiting.shift(); running++;
+        item.el.className = 'is-sending';
+        (function (item) {
+          prepare(item.file).then(function (pr) {
+            return send(item, pr).catch(function () { return send(item, pr); });   /* one retry */
+          }).then(function () {
+            item.el.className = 'is-done'; sent++;
+            item.el.setAttribute('aria-label', 'Sent');
+          }, function (e) {
+            item.el.className = 'is-failed'; failed++;
+            item.el.title = e.message; item.el.setAttribute('aria-label', 'Not sent: ' + e.message);
+            if (failed === 1) { thanks.hidden = false; thanks.textContent = e.message; }
+          }).then(function () {
+            running--;
+            if (!running && !waiting.length && sent) {
+              thanks.hidden = false;
+              thanks.textContent = sent === 1 ? 'Got it, thank you! Keep them coming.' : 'All ' + sent + ' photos are in. Thank you! Keep them coming.';
+              if (!reduced) FX.sparkle(window.innerWidth / 2, window.innerHeight * 0.6);
+            }
+            next();
+          });
+        })(item);
+      }
+    }
+    function add(files) {
+      thanks.hidden = true;
+      Array.prototype.slice.call(files || []).filter(function (f) { return /^image\//.test(f.type) || /\.(heic|heif)$/i.test(f.name); }).forEach(function (file) {
+        var li = document.createElement('li'), img = document.createElement('img');
+        img.alt = ''; img.src = URL.createObjectURL(file);
+        img.onerror = function () { img.remove(); };               /* e.g. HEIC preview on a laptop */
+        li.appendChild(img); li.className = 'is-waiting';
+        list.appendChild(li);
+        waiting.push({ file: file, el: li });
+      });
+      next();
+    }
+    ['#pbCamera', '#pbPick'].forEach(function (sel) {
+      $(sel).addEventListener('change', function (e) { add(e.target.files); e.target.value = ''; });
+    });
+  })();
+
 })();

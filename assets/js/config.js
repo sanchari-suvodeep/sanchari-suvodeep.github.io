@@ -19,6 +19,19 @@ window.WEDDING_CONFIG = {
     apiKey: 'AIzaSyBn87xwduHNH_0zZuLRL1wfjcmoOinukG0'
   },
 
+  /* ---- The photo booth ------------------------------------------------
+     Guests share photos from Dec 11 (lodge time), only after scanning one of
+     the QR signs at the lodge (the QR carries a code; without it the page
+     just asks them to scan one). Photos go to the wedding's Google Drive
+     through the Wedding HQ service; the service checks the code and dates
+     too, so editing this file can't open it early.
+  ------------------------------------------------------------------- */
+  photoBooth: {
+    opens: '2026-12-11',
+    closes: '2026-12-21',
+    api: 'https://wedding-hq-api.sanchari-suvodeep.workers.dev'
+  },
+
   /* ---- Shown to guests if a reply can't be sent ---------------------- */
   contactEmail: 'suvodeep.majumder90@gmail.com',
 
